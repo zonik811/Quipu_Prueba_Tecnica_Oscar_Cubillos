@@ -17,9 +17,11 @@ import java.util.stream.Collectors;
 public class PlaylistService {
 
     private final PlaylistRepository playlistRepository;
+    private final SpotifyService spotifyService;
 
-    public PlaylistService(PlaylistRepository playlistRepository) {
+    public PlaylistService(PlaylistRepository playlistRepository, SpotifyService spotifyService) {
         this.playlistRepository = playlistRepository;
+        this.spotifyService = spotifyService;
     }
 
     @Transactional
@@ -30,7 +32,7 @@ public class PlaylistService {
             for (SongDto songDto : request.getCanciones()) {
                 String genero = songDto.getGenero();
                 if (genero == null || genero.isBlank()) {
-                    genero = "Desconocido";
+                    genero = spotifyService.obtenerGeneroPorCancion(songDto.getTitulo(), songDto.getArtista());
                 }
                 Song song = new Song(
                         songDto.getTitulo(),
