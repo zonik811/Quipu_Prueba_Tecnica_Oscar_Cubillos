@@ -80,6 +80,19 @@ public class SpotifyService {
         return DEFAULT_GENRES.get(random.nextInt(DEFAULT_GENRES.size()));
     }
 
+    public List<String> obtenerGenerosDisponibles() {
+        try {
+            String token = getAccessToken();
+            List<String> genreSeeds = getAvailableGenreSeeds(token);
+            if (!genreSeeds.isEmpty()) {
+                return genreSeeds;
+            }
+        } catch (Exception e) {
+            log.warn("Error obteniendo genre seeds: {}", e.getMessage());
+        }
+        return DEFAULT_GENRES;
+    }
+
     private String searchArtistId(String token, String titulo, String artista) {
         try {
             String query = URLEncoder.encode("track:" + titulo + " artist:" + artista, StandardCharsets.UTF_8);
