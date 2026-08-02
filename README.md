@@ -1,6 +1,6 @@
 # Spotify Playlist API
 
-API REST para gestión de playlists musicales con integración de Spotify para enriquecimiento automático de géneros.
+API REST para gestión de playlists musicales con integración de Spotify para enriquecimiento automático de géneros y recomendaciones por IA con Groq.
 
 ## Stack
 
@@ -10,6 +10,7 @@ API REST para gestión de playlists musicales con integración de Spotify para e
 | Java | 17 LTS |
 | Base de datos | H2 (en memoria) |
 | Seguridad | JWT stateless + CSRF (Double Submit Cookie) |
+| IA / LLM | Groq + Llama 3.1 |
 | Build | Maven |
 
 ## Requisitos
@@ -17,6 +18,7 @@ API REST para gestión de playlists musicales con integración de Spotify para e
 - JDK 17+
 - Maven 3.8+
 - Cuenta de Spotify (gratuita o premium)
+- (Opcional) Cuenta de Groq para recomendaciones IA
 
 ## Obtener credenciales de Spotify
 
@@ -26,6 +28,16 @@ API REST para gestión de playlists musicales con integración de Spotify para e
 4. Llena nombre y descripción (ej: "Playlist API")
 5. Copia el **Client ID** y **Client Secret**
 6. Ve a **Settings** > **Redirect URIs** y añade `http://localhost:8081` (no se usa OAuth redirect pero es requerido por Spotify)
+
+## Obtener API Key de Groq (recomendaciones IA)
+
+La API usa Groq con Llama 3.1 para generar recomendaciones inteligentes basadas en el contenido de tus playlists. Sin esta key, las recomendaciones usan un fallback por género.
+
+1. Ve a [Groq Cloud Console](https://console.groq.com)
+2. Regístrate o inicia sesión (gratuito, incluye créditos)
+3. Ve a **API Keys** en el menú lateral
+4. Haz clic en **Create API Key**
+5. Copia la key generada
 
 ## Variables de entorno
 
@@ -39,6 +51,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123
 SERVER_PORT=8081
 CORS_ORIGINS=http://localhost:5173
+GROQ_API_KEY=tu_api_key_de_groq
 ```
 
 El archivo `.env` **nunca** se commitea (está en `.gitignore`).
@@ -54,6 +67,7 @@ $env:SPOTIFY_CLIENT_ID="tu_client_id"
 $env:SPOTIFY_CLIENT_SECRET="tu_client_secret"
 $env:JWT_SECRET="unaClaveSecretaDeAlMenos32BytesDeLongitud"
 $env:ADMIN_PASSWORD="admin123"
+$env:GROQ_API_KEY="tu_api_key_de_groq"
 ```
 
 ### En terminal (Linux/Mac)
@@ -63,6 +77,7 @@ export SPOTIFY_CLIENT_ID=tu_client_id
 export SPOTIFY_CLIENT_SECRET=tu_client_secret
 export JWT_SECRET=unaClaveSecretaDeAlMenos32BytesDeLongitud
 export ADMIN_PASSWORD=admin123
+export GROQ_API_KEY=tu_api_key_de_groq
 ```
 
 ## Ejecutar
@@ -86,6 +101,31 @@ Consola H2: `http://localhost:8081/h2-console` (requiere autenticación).
 | `GET` | `/lists` | Sí | Listar todas las playlists |
 | `GET` | `/lists/{name}` | Sí | Obtener playlist por nombre |
 | `DELETE` | `/lists/{name}` | Sí | Eliminar playlist |
+| `GET` | `/spotify/genres` | Sí | Listar géneros disponibles en Spotify |
+| `GET` | `/lists/{name}/recommendations` | Sí | Recomendaciones IA basadas en la playlist |
+
+### Ejemplo de recomendaciones
+
+```bash
+curl -X GET http://localhost:8081/lists/Rock%20Classics/recommendations \
+  -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9..."
+```
+
+Respuesta:
+```json
+{
+  "playlist": "Rock Classics",
+  "recommendations": [
+    {
+      "titulo": "Born to Run",
+      "artista": "Bruce Springsteen",
+      "razon": "Clásico del rock con la misma energía"
+    }
+  ]
+}
+```
+
+Si `GROQ_API_KEY` está configurada, las recomendaciones las genera Llama 3.1 analizando el contenido real de la playlist. Si no, usa un fallback con recomendaciones predefinidas por género.
 
 ### Ejemplo de login
 
